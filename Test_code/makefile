@@ -5,7 +5,7 @@ SIZE = arm-none-eabi-size
 
 # Project files
 SRCS = main.c startup_stm32f401xe.c system_stm32f4xx.c
-INCLUDES = -I. -ICMSIS
+INCLUDES = -ICMSIS -IDevice -IStartup -IInc
 
 # Linker script
 LDSCRIPT = linker_script.ld
