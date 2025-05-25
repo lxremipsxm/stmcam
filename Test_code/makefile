@@ -1,43 +1,38 @@
 # Toolchain
 CC = arm-none-eabi-gcc
 OBJCOPY = arm-none-eabi-objcopy
-SIZE = arm-none-eabi-size
+CFLAGS = -Wall -O2 -mcpu=cortex-m4 -mthumb -nostdlib -nostartfiles \
+         -Iinc -Isystem
+LDFLAGS = -Tlinker/linker.ld
 
-# Project files
-SRCS = main.c startup_stm32f401xe.c system_stm32f4xx.c
-INCLUDES = -ICMSIS -IDevice -IStartup -IInc
+# Files
+SRC_C = src/main.c system/system_stm32f4xx.c src/libc_stub.c
+SRC_S = startup/startup_stm32f401xe.s
+OBJ = $(SRC_C:.c=.o) $(SRC_S:.s=.o)
 
-# Linker script
-LDSCRIPT = linker_script.ld
+# Targets
+all: main.elf main.bin
 
-# Compiler flags
-CFLAGS = -mcpu=cortex-m4 -mthumb -std=gnu11 -O2 -Wall -ffunction-sections -fdata-sections \
-         -g -DSTM32F401xE $(INCLUDES)
-
-# Linker flags
-LDFLAGS = -T$(LDSCRIPT) -mcpu=cortex-m4 -mthumb -nostartfiles -Wl,--gc-sections
-
-# Output
-TARGET = firmware
-
-# Default target
-all: $(TARGET).bin
-
-# Compile object files
+# Compile C files
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-# Link the final ELF executable
-$(TARGET).elf: $(SRCS:.c=.o) $(LDSCRIPT)
-	$(CC) $(LDFLAGS) $^ -o $@
-	$(SIZE) $@
+# Compile assembly file using arm-none-eabi-gcc
+%.o: %.s
+	$(CC) -c -mcpu=cortex-m4 -mthumb -o $@ $<
 
-# Convert ELF to binary for flashing
-$(TARGET).bin: $(TARGET).elf
+# Link the ELF file
+main.elf: $(OBJ)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
+
+# Convert ELF to binary
+main.bin: main.elf
 	$(OBJCOPY) -O binary $< $@
 
-# Clean build files
-clean:
-	rm -f *.o *.elf *.bin
+# Flash binary to board
+flash: main.bin
+	st-flash write main.bin 0x8000000
 
-.PHONY: all clean
+# Clean build artifacts
+clean:
+	rm -f src/*.o system/*.o startup/*.o *.elf *.bin
