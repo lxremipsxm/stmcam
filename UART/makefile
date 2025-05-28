@@ -1,0 +1,38 @@
+# Toolchain
+CC = arm-none-eabi-gcc
+OBJCOPY = arm-none-eabi-objcopy
+CFLAGS = -Wall -O2 -mcpu=cortex-m4 -mthumb -nostdlib -nostartfiles \
+         -Iinc -Isystem
+LDFLAGS = -Tlinker/linker.ld
+
+# Files
+SRC_C = src/main.c system/system_stm32f4xx.c src/libc_stub.c
+SRC_S = startup/startup_stm32f401xe.s
+OBJ = $(SRC_C:.c=.o) $(SRC_S:.s=.o)
+
+# Targets
+all: main.elf main.bin
+
+# Compile C files
+%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+# Compile assembly file using arm-none-eabi-gcc
+%.o: %.s
+	$(CC) -c -mcpu=cortex-m4 -mthumb -o $@ $<
+
+# Link the ELF file
+main.elf: $(OBJ)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
+
+# Convert ELF to binary
+main.bin: main.elf
+	$(OBJCOPY) -O binary $< $@
+
+# Flash binary to board
+flash: main.bin
+	st-flash write main.bin 0x8000000
+
+# Clean build artifacts
+clean:
+	rm -f src/*.o system/*.o startup/*.o *.elf *.bin
