@@ -6,7 +6,7 @@ CFLAGS = -Wall -O2 -mcpu=cortex-m4 -mthumb -nostdlib -nostartfiles \
 LDFLAGS = -Tlinker/linker.ld
 
 # Files
-SRC_C = src/main.c system/system_stm32f4xx.c src/libc_stub.c
+SRC_C = src/main.c system/system_stm32f4xx.c src/libc_stub.c src/delays.c src/uart.c
 SRC_S = startup/startup_stm32f401xe.s
 OBJ = $(SRC_C:.c=.o) $(SRC_S:.s=.o)
 
