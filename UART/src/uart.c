@@ -3,7 +3,8 @@ UART/src/uart.c
 Testing + developing usart user-defined library
 Ideally, output from this code should be readable by putty once flashed onto STM32F4
 
-Comments:
+Comments
+--------
 5/29/25: Test successful
 */
 

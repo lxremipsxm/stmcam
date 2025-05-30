@@ -12,7 +12,19 @@ Comments
 #include "delays.h"
 #include "uart.h"
 
-void main(void){
-    
 
+void main(void){
+    uart_com_init();
+    delay_init();
+
+    while(1){
+
+        char strs[3][10] = {"interior", "crocodile", "alligator"};
+        for (int i=0; i<3; i++){
+            send_com_string(strs[i]);
+            send_com_string("\r\n");
+            delay_ms(500);
+        }
+        
+    }
 }
