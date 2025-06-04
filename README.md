@@ -45,7 +45,7 @@ linker/ contains the linker file, linker.ld
 src/ contains my source code, main.c, and library files, which I will put in a subdirectory called lib/
 inc/: contains the following, which are dependencies required by system_stm32f4xx.c.
 
-![File Structure](images/inc_filestructure.png|500)
+![File Structure](images/inc_filestructure.png)
 
 Most of the issues I had in this part of the project were due to missing dependencies, which I combed through the STM32CubeF4 repo for, so I restarted several times, trying different organizations that I thought would work. Eventually, I settled on this, and my code compiled successfully when I ran `make`, so I stuck with it. 
 
