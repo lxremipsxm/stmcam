@@ -1,7 +1,6 @@
 # Camera with STM32 and OV7670
 
 ## Getting Started
----
 
 I wanted to start out by creating a simple UART script to flash to my STM32. This would give me an introduction to the compilation tools I would need, help me create a simple user-defined UART library I could then use to debug later on, and also give me an idea of how my makefiles should look for future updates. I also will avoid installing the STM32Cube IDE, since I want to work more bare-metal, and try to handle memory and registers myself.
 
@@ -29,6 +28,7 @@ I grabbed a couple files from the [ST electronics github repository](https://git
 
 So far, the files are organized like this:
 
+```
 Camera/
 
 	Test_code/
@@ -44,18 +44,18 @@ Camera/
 		linker/
 
 		makefile
+```
 
 
+`startup/` contains `startup_stm32f401xe.s`. This preps the board for running the main code
 
-startup/: contains `startup_stm32f401xe.s`. This preps the board for running the main code
+`system/` contains `system_stm32f4xx.c`. It defines the clock source and vector table location.
 
-system/: contains `system_stm32f4xx.c`. It defines the clock source and vector table location.
+`linker/` contains the linker file, `linker.ld`
 
-linker/ contains the linker file, `linker.ld`
+`src/` contains my source code, `main.c`, and library files, which I will put in a subdirectory called `lib/`
 
-src/ contains my source code, `main.c`, and library files, which I will put in a subdirectory called lib/
-
-inc/: contains `stm32f401xe.h` and the following, which are dependencies required by `stm32f401xe.h`.
+`inc/` contains `stm32f401xe.h` and the following, which are dependencies required by `stm32f401xe.h`.
 
 ![File Structure](images/inc_filestructure.png)
 
@@ -86,7 +86,6 @@ My `linker.ld` file modifies the Memory regions according to the size of flash a
 
 ## Setting up Communication and Delays
 
----
 ### Progression
 
 #### Setting up USART communication - 5/29/25
