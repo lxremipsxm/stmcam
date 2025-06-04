@@ -29,20 +29,31 @@ I grabbed a couple files from the [ST electronics github repository](https://git
 
 So far, the files are organized like this:
 Camera/
+
 	Test_code/
+
 		inc/
+
 		src/
+
 		startup/
+
 		system/
+
 		linker/
+        
 		makefile
 
 
 
 startup/: contains startup_stm32f401xe.s. This preps the board for running the main code
+
 system/: contains system_stm32f4xx.c. It defines the clock source and vector table location.
+
 linker/ contains the linker file, linker.ld
+
 src/ contains my source code, main.c, and library files, which I will put in a subdirectory called lib/
+
 inc/: contains the following, which are dependencies required by system_stm32f4xx.c.
 
 ![File Structure](images/inc_filestructure.png)
