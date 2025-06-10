@@ -19,6 +19,60 @@ SPDX-FileCopyrightText: 2020 P Burgess for Adafruit Industries
 SPDX-License-Identifier: MIT
 */
 
+#include "inc/stm32f4xx.h"
+#if defined(STM32F4)
+#include "ov7670.h"
+#endif
+
+OV7670_status OV7670_arch_begin(OV7670_host *host) {
+
+    //Setup timer as required: This is not flexible, and will be defined for a single timer
+    //as that is all I need to supply to XCLK
+
+    //The code for the SAMD5 uses PCC, or parallel capture controller. I am not aware of whether 
+    //STM32F01RE has a PCC equivalent, so I will do some more digging to find an equivalent or alternative
+
+    //return OV7670_STATUS_OK; OR OV7670_STATUS_ERR_PERIPHERAL;
+}
+
+
+void OV7670_capture(uint32_t *dest, uint16_t width, uint16_t height,
+                    volatile uint32_t *vsync_reg, uint32_t vsync_bit,
+                    volatile uint32_t *hsync_reg, uint32_t hsync_bit) {
+
+    //This sends the picture over PCC for the SAMD5
+
+    //I should be able to try using serial over the OV7670 output pins if possible.
+    //I may have to redefine the params for this function in order to perform.
+
+    //Note to self: the original author disables and enables interrupts when
+    //this function is called; make sure not to forget that and check why this is so.
+                    
+
+}
+
+
+/*
+Additional methods I must define(ensure they are defined before the two methods above):
+- OV7670_delay_ms(x)
+- OV7670_pin_output(pin)
+- OV7670_pin_write(pin, hi)
+- OV7670_disable_interrupts()
+- OV7670_enable_interrupts()
+
+
+
+Another note to self: Make a "clean" and "unclean" version of this file. 
+The clean vers can go into the stm32 and the unclean can be stored on the repo,
+retaining the formatting, comments, and ifdefs and stuff, so that it's still usable
+as it was.
+*/
+
+
+
+
+
+
 // This is the SAMD51-specific parts of OV7670 camera interfacing (device-
 // agnostic parts are in ov7670.c). It configures and accesses hardware-
 // specific peripherals (timer PWM and the parallel capture controller).
@@ -265,7 +319,7 @@ void OV7670_capture(uint32_t *dest, uint16_t width, uint16_t height,
 // OV7670_enable_interrupts()
 // Also see notes at top regarding pin MUXing in this file.
 
-#endif // end __SAMD51__
+#endif // end __SAMD5__
 
 // Notes from past self: early version of this code that I adopted used
 // GCLK5 to provide the XCLK signal to the camera, and was written before
@@ -279,4 +333,3 @@ void OV7670_capture(uint32_t *dest, uint16_t width, uint16_t height,
 // the cache be disabled. That no longer seems to be necessary, PCC and
 // related code runs fine even with cache.
 
-*/
