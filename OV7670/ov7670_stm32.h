@@ -1,6 +1,6 @@
 /*Siddharth Vasudevan
 
-OV7670/src/lib/stm32.h
+OV7670/ov7670_stm32.h
 
 Header for ov7670_stm32.c, adapted from Adafruit_OV7670:
 https://github.com/adafruit/Adafruit_OV7670/tree/master
@@ -11,7 +11,10 @@ Comments
 6/10/25: Created file, figuring out details. I will most likely move this file 
 into the inc/ folder directly so I don't have to adjust my entire working directory.
 
-
+License and Credit
+------------------
+SPDX-FileCopyrightText: 2020 P Burgess for Adafruit Industries
+SPDX-License-Identifier: MIT
 */
 
 #pragma once
@@ -30,7 +33,7 @@ typedef int8_t OV7670_pin;
 
 // OV7670 datasheet claims 10-48 MHz clock input, with 24 MHz typical.
 // If any trouble, try dialing this down to 16 or 12 MHz.
-//---------------^Notes from previous author^------------------------
+//---------------^paraphrased from previous author^------------------------
 
 // I'll start with a ~20MHz clock. 
 

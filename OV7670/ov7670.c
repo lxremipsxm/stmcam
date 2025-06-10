@@ -1,6 +1,15 @@
-// SPDX-FileCopyrightText: 2020 P Burgess for Adafruit Industries
-//
-// SPDX-License-Identifier: MIT
+/* Siddharth Vasudevan
+OV7670/ov7670.c
+
+Library for OV7670 camera module, adapted from:
+https://github.com/adafruit/Adafruit_OV7670/tree/master
+
+
+License and Credit
+------------------
+SPDX-FileCopyrightText: 2020 P Burgess for Adafruit Industries
+SPDX-License-Identifier: MIT
+*/
 
 #include "ov7670.h"
 

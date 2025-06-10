@@ -1,12 +1,19 @@
-// SPDX-FileCopyrightText: 2020 P Burgess for Adafruit Industries
-//
-// SPDX-License-Identifier: MIT
+/* Siddharth Vasudevan
+OV7670/ov7670.h
+
+Header for ov7670.c
+
+License and Credit
+------------------
+SPDX-FileCopyrightText: 2020 P Burgess for Adafruit Industries
+SPDX-License-Identifier: MIT
+*/
 
 #pragma once
 
 // IMPORTANT: #include ALL of the arch-specific .h files here.
 // They have #ifdef checks to only take effect on the active architecture.
-#include "arch/samd51.h"
+#include "ov7670_stm32.h"
 
 #if defined(ARDUINO)
 #include <Arduino.h>

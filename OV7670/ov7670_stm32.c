@@ -1,5 +1,5 @@
 /*Siddharth Vasudevan
-OV7670/stm32.c
+OV7670/ov7670_stm32.c
 
 This file provides architecture specific data so that the ov7670 can be interfaced
 with my STM32F401RE. I've named the file ov7670_stm32.c (as opposed to just stm32f401re.c, or something similar)
@@ -12,40 +12,12 @@ but I will move it into inc/ later.
 Comments
 --------
 6/10/25: Created file
+
+License and Credit
+------------------
+SPDX-FileCopyrightText: 2020 P Burgess for Adafruit Industries
+SPDX-License-Identifier: MIT
 */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*-------------Everything below this line is for reference------------
-
-
-// SPDX-FileCopyrightText: 2020 P Burgess for Adafruit Industries
-//
-// SPDX-License-Identifier: MIT
 
 // This is the SAMD51-specific parts of OV7670 camera interfacing (device-
 // agnostic parts are in ov7670.c). It configures and accesses hardware-
@@ -60,7 +32,9 @@ Comments
 // platform-agnostic remap around that...instead, call or implement pin
 // MUXing functions "manually" in those few spots.
 
-#if defined(__SAMD51__)
+
+#include "inc/stm32f4xx.h"
+#if defined(STM32F4)
 #include "ov7670.h"
 
 #if defined(ARDUINO)
