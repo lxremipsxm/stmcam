@@ -1,5 +1,5 @@
 /*Siddharth Vasudevan
-UART/src/delays.c
+UART/src/lib/delays.c
 
 Comments
 --------

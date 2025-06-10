@@ -105,7 +105,7 @@ This is more of a side learning endeavor, since I didn’t fully pay attention t
 
 I set out to use a TIM-based delay library, partially so that I could learn how timers work in practice. 
 
-I later successfully created TIM-based delays. It’s very simple, but my primary issue with implementing this was understanding how the prescaler works. The peripheral buses (APBs) on STM32F401RE have their own clocks, and the timer I was using, TIM2, has a doubled clock frequency compared to these. Initially, I set the prescaler register to the divisor assuming the original 16MHz clock was at work, which was wrong, rendering my delay test using PuTTY and UART being significantly off the mark (sample text with delays set for one second would take 3-5 seconds to show up).
+I later successfully created TIM-based delays. It’s very simple, but my primary issue with implementing this was understanding how the prescaler works. The peripheral buses (APBs) on STM32F401RE have their own clocks, and the timer I was using, TIM2, has a doubled clock frequency compared to these (up to 84MHz). Initially, I set the prescaler register to the divisor assuming the original 16MHz clock was at work, which was wrong, rendering my delay test using PuTTY and UART being significantly off the mark (sample text with delays set for one second would take 3-5 seconds to show up).
 
 
 ### Challenges
@@ -119,11 +119,25 @@ One of the biggest issues I overcame here was understanding how to read the docu
 
 When trying to activate the clocks for GPIOA and USART2, I learned that the clocks for the buses these peripherals are attached to need to be activated first. The buses form a heirarchy, where AHB1 (Advanced High-Performance Bus) connects memory and high-speed peripherals, such as GPIO registers. AHB1 is then connected to two APBs, or Advanced Peripheral Buses via AHB-APB bridges. The APBs are referred to as APB1 and APB2, where APB2 can activate higher speed peripherals. 
 
+Note: After further reading I found that there is another High Performance Bus, AHB2, which has one peripheral on it on this chip: a USB OTG FS peripheral (which I assume is used more in STM32Cube) that allows communication between a USB host and the board.
+
 The AHB1 struct in `stm32f401xe.h` has a member called RCC, which is the Reset and Clock Control peripheral that enables/disables/resets the clock on different peripherals. For example, `RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;` enables the clock for the GPIOA peripheral. 
 
 
 #### Using the Reference Manual and Associated Headers
 
-I learnt the above by reading the [ST electronics reference manual](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://www.st.com/resource/en/reference_manual/rm0368-stm32f401xbc-and-stm32f401xde-advanced-armbased-32bit-mcus-stmicroelectronics.pdf). Like I said earlier, reading this involves reading all of the prerequisite sections first, like reading the RCC section before getting to the general-purpose timer section/USART section. However, implementing the contents of the RF involve scouring `stm32f401xe.h` for the right typedef struct, and then finding the correct member to set the register bits as required. Additionally, since STM32 has 32-bit registers rather than 8-bit registers (which I am more experienced with), the bitwise operations require a bit more thought than simple left or right shifts.
+I learnt the above by reading the [ST electronics reference manual](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://www.st.com/resource/en/reference_manual/rm0368-stm32f401xbc-and-stm32f401xde-advanced-armbased-32bit-mcus-stmicroelectronics.pdf). Like I said earlier, reading this involves reading all of the prerequisite sections first, like reading the RCC section before getting to the general-purpose timer section/USART section. However, implementing the contents of the RF involve scouring `stm32f401xe.h` for the right `typedef`, and then finding the correct member to set the register bits as required. Additionally, since STM32 has 32-bit registers rather than 8-bit registers (which I am more experienced with), the bitwise operations require a bit more thought than simple left or right shifts.
 
 ---
+
+## OV7670
+
+### Progression
+
+#### Finding the right library - 6/8/25
+
+It's been about a week, and I've been trying to find the best ov7670 libraries for my purposes. The last week, I've been trying to figure out [this library](https://github.com/adafruit/Adafruit_OV7670/blob/master/src/ov7670.c) by Adafruit. The sole issue with this is that it has been developed with so much flexibility that any architecture should be able to run it. However, this also means customizing it myself, which I am unsure of how I should start, or where to start. There are three external C functions I need to provide specific to my architecture, `void OV7670_print(char *str);`, `int OV7670_read_register(void *platform, uint8_t reg);`, and `void OV7670_write_register(void *platform, uint8_t reg, uint8_t value);`. I will find some forums online to see what direction people have taken.
+
+#### Customizing Adafruit's OV7670 library - 6/10/25
+
+After scrutinizing the aforementioned Adafruit library, I found that the comments suggested taking a look at the library intended for use by the Arduino IDE, where I found examples of the implementations of the aforementioned methods. The print method is pretty straightforward, since I already have a USART library, but the other two use `Wire.h`, which means I will need to work out how to implement them.

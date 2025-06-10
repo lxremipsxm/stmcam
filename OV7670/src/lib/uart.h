@@ -1,5 +1,5 @@
 /*Siddharth Vasudevan
-UART/src/uart.h
+UART/src/lib/uart.h
 Header file for user-defined library
 */
 

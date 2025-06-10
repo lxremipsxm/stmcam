@@ -9,8 +9,8 @@ Comments
 */
 
 #include "stm32f4xx.h"
-#include "libraries/delays.h"
-#include "libraries/uart.h"
+#include "lib/delays.h"
+#include "lib/uart.h"
 
 
 void main(void){

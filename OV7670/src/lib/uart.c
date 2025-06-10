@@ -1,5 +1,5 @@
 /*Siddharth Vasudevan
-UART/src/uart.c
+UART/src/lib/uart.c
 Testing + developing usart user-defined library
 Ideally, output from this code should be readable by putty once flashed onto STM32F4
 
