@@ -141,3 +141,18 @@ It's been about a week, and I've been trying to find the best ov7670 libraries f
 #### Customizing Adafruit's OV7670 library - 6/10/25
 
 After scrutinizing the aforementioned Adafruit library, I found that the comments suggested taking a look at the library intended for use by the Arduino IDE, where I found examples of the implementations of the aforementioned methods. The print method is pretty straightforward, since I already have a USART library, but the other two use `Wire.h`, which means I will need to work out how to implement them. Apart from that, I've realized that despite the library being a little more platform agnostic than most others, it is still heavily tailored towards Arduino/SAMD5 use, which means I will need to tweak the `arch/` files (`arch/samd51.c` and its header file, both in the linked repository). The code is extremely flexible, which I don't really require (for example, one function, `OV7670_arch_begin()` sets up a timer for the `XCLK` pin, but assumes that the user will choose any timer on board, so there are a lot of `ifdef`s. I will only need one timer definition for `XCLK`). I'll trim down the code + add the required functionality as I need and then begin testing the module.
+
+##### Customizing Library, continued - 6/11/25
+
+I discovered why the library is not developed fully for STM32 use. Or at least my board, which does not have a Parallel Capture Controller. In order to capture at the maximum possible frame rate, I need parallel capture configured. For this, it's recommended that I use external high-speed FIFO RAM module, which I will have to buy, but I cannot find anywhere. I will have to resort to serial capture. My initial plan was to only have a picture functionality, and maybe image pre-/post-processing so I will stick to that. The idea is that I use a microSD to construct the image line-by-line, and simultaneously display it on an LCD screen using interrupts to make the process more efficient.
+
+Anyways, I am currently trying to map out how to build the functions I need in `ov7670.c`. Arduino has a simple GPIO number system that abstracts away the Port B, C, and D names and numbers, which probably makes it easier to code baremetal. I'll look online and in the `stm31f401xe.h` file to see if I can find something similar that will benefit me in this way. I do see D0 to D15 and A0 to A5. I will need to look a little deeper to see if any of them are being used in my other libraries, such as pin PA_2, which is currently being used for USART2 (Alternate function `USART_TX`). I similarly need to avoid using up all the pins that are SPI enabled, as I need them for the LCD screen; I'll dedicate pins `{PB_3, PB_4, PB_5}` for LCD SPI. 
+
+Also, for reference, I'm using the images on [this site](https://os.mbed.com/platforms/ST-Nucleo-F401RE/) to make these decisions. Speaking of, I found a link on this site that has a pin map library, which I might use, for which I might need to include some additional dependencies. 
+
+If that results in too many changes, I'll just create my own numerical pin map, with just the pins that I need. 
+
+I've looked through the code for ov7670, and it's clear I only ever need to set two pins to output and write `LOW` or `HIGH` to them. This means I can pretty much just hardcode setting the pins to output, and the parameter `pin` can just be a sort of boolean 
+
+
+
