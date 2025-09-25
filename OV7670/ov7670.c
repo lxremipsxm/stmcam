@@ -12,6 +12,7 @@ SPDX-License-Identifier: MIT
 */
 
 #include "ov7670.h"
+#include "ov7670_stm32.h"
 
 // REQUIRED EXTERN FUNCTIONS -----------------------------------------------
 
@@ -190,8 +191,8 @@ OV7670_status OV7670_begin(OV7670_host *host, OV7670_colorspace colorspace,
   // ENABLE AND/OR RESET CAMERA --------------------------------------------
 
   if (host->pins->enable >= 0) { // Enable pin defined?
-    OV7670_pin_output(host->pins->enable)
-        OV7670_pin_write(host->pins->enable, 0); // PWDN low (enable)
+    OV7670_pin_output(host->pins->enable);
+    OV7670_pin_write(host->pins->enable, 0); // PWDN low (enable)
     OV7670_delay_ms(300);
   }
 

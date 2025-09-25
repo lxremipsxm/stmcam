@@ -1,5 +1,5 @@
 /*Siddharth Vasudevan
-UART/src/uart.c
+UART/src/lib/uart.c
 Testing + developing usart user-defined library
 Ideally, output from this code should be readable by putty once flashed onto STM32F4
 
@@ -20,9 +20,9 @@ RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
 //Enable USART2 clock
 RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 
-//Enable alternate function (USART) on GPIO A
-GPIOA->MODER |= ((0x2) << (2*2)); //Sets Alternate function mode on A2
-GPIOA->AFR[0] |= (0x7 << (2*4)); //Selects Alternate function 7 on pin A2, USART
+//Enable alternate function (USART) on GPIO
+GPIOA->MODER |= ((0x2) << (2*2)); //Selects Alternate function mode (10 * 2^18)
+GPIOA->AFR[0] |= (0x7 << (2)*4); //Selects Alternate function 7 on pin A2, USART
 
 //Program M bit for 9 bits
 //USART2->CR1 |= USART_CR1_M;

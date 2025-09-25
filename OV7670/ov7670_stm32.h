@@ -35,7 +35,9 @@ typedef int8_t OV7670_pin;
 // If any trouble, try dialing this down to 16 or 12 MHz.
 //---------------^paraphrased from previous author^------------------------
 
-// I'll start with a ~20MHz clock. 
+// I'll start with a ~20MHz clock. Since APB1 peripherals have a max 
+//clock of 42MHz, I can prescale it by 2 to get 21MHz. If I have trouble with it,
+//I'll decrease it.
 
 #define OV7670_XCLK_HZ 21000000 ///< XCLK to camera, 8-24 MHz
 
@@ -44,6 +46,7 @@ typedef struct {
   void *timer;    ///< TC or TCC peripheral base address for XCLK out
   bool xclk_pdec; ///< If true, XCLK needs special PDEC pin mux
 } OV7670_arch;
+
 
 #ifdef __cplusplus
 extern "C" {

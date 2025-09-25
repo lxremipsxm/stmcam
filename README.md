@@ -154,12 +154,22 @@ If that results in too many changes, I'll just create my own numerical pin map, 
 
 Update: I've looked through the code for ov7670, and it's clear I only ever need to set two pins to output and write `LOW` or `HIGH` to them. This means I can pretty much just hardcode setting the pins to output, and the parameter `pin` can just be a sort of boolean with two options: reset or enable.
 
-
 ##### 8/21/25
 
 I've added the timer initialization to the `OV7670_arch_begin()`. I've skipped the transfer initialization for now, but I will need to decide a good serial protocol to provide communication between the camera and the MCU that will facilitate the best frame rate, especially considering I am trying to sneak an LCD display in there.
 
 I believe it makes best sense to leave this library as-is for now, and work on getting the SD slot to work with the board. That way, I can have everything ready for when I want to set up the capture function.
+
+
+##### 9/4/25 
+
+After further research, I've concluded that I don't even need serial transfer: instead of DCMI (which Nucleo F401 does not have), I can emulate parallel capture with GPIO+DMA(Direct Memory Access) peripherals. In order to implement this, I need to read the documentation fully to ensure I understand entirely how DMA works. I've found an Application Note by ST Microelectronics titled AN4666, "Parallel Synchronous Transmission". I'll read this and then implement it before I move on to the SD card. This means I can set up DMA in the `OV7670_arch_begin()` method. Then, I'll use the original author's logic to implement a DMA version of `OV7670_capture()`.
+
+##### 9/25/25
+
+It's been about two weeks since my last update. So far, I've made a ton of progress with DMA. Right now, I have implemented the `OV7670_arch_begin()` method using two timers (this is not a robust setup: it's hard coded to TIM1 and TIM3). TIM1 is the clock on which the camera runs; it is the 20 MHz signal that is inputted into the `XCLK` pin. TIM3, on the other hand, is triggered by the pixel clock `PCLK` coming off the camera, which indicates when new data is available for capture over the 8 data pins. DMA is triggered by rising edges in the signal on TIM3, which is when it captures data. DMA1 is set to double-buffer mode, which prevents data from accidentally getting erased/lost when new data is captured from the data pins. Additionally, DMA1 is set to capture data off `PORTB[7:0]`. This is where the data pins will be connected. 
+
+I've also implemented *some* of the `OV7670_capture()` method. Right now, all I need to get that to work is to wire up the camera, using USART to check if the clocks are triggering DMA by checking relevant flags (I haven't figured out which ones yet), and then commenting out USART. Once I wire up a display, I can try using SPI to transfer data from memory to the screen and seeing if anything pops up.
 
 
 ### Challenges

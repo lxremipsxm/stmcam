@@ -1,5 +1,5 @@
 /*Siddharth Vasudevan
-UART/src/lib/delays.c
+SD_slot/src/lib/delays.c
 
 Comments
 --------
@@ -16,7 +16,7 @@ void delay_init(){
     RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
 
     //set clock prescaler
-    TIM2->PSC = (SystemCoreClock/1000000)-1; //16000000/s / 16 => 1/us
+    TIM2->PSC = (SystemCoreClock/1000000)-1; //16000000/s => 1/us
 
     //reset timer config entirely
     TIM2->CR1 = 0;
