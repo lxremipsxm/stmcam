@@ -27,7 +27,7 @@ SPDX-License-Identifier: MIT
 // functions in question aren't performance-oriented anyway (typically used
 // just once on startup, or during I2C transfers which are slow anyway).
 
-extern void OV7670_print(char *str);
+extern void OV7670_print(char *str); 
 extern int OV7670_read_register(void *platform, uint8_t reg);
 extern void OV7670_write_register(void *platform, uint8_t reg, uint8_t value);
 

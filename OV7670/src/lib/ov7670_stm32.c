@@ -201,24 +201,30 @@ OV7670_status OV7670_arch_begin(OV7670_host *host) {
     TIM3->CR1 |= TIM_CR1_CEN; //Tim3 enabled. In this mode, at every rising edge, TIF flag is set. 
 
     //Setting up DMA1
-    //The number of DMA captures that will be made is stored in NDTR. We have a resolution of 640x480, so that's 307 200 pixels.
+    //The number of DMA captures that will be made is stored in NDTR. The camera has a resolution of 640x480, so that's 307 200 pixels.
     //Since I'm capturing line-by-line, and each pixel is 8 bits, I need to capture 640 bytes of information. Each DMA transfer
     //transfers one byte from data[7:0] to memory until 640 pixels have been transferred. 
     //This repeats until the number of rows matches the height of the resolution (480 in my case)
+    //Then, DMA switches over to the second memory buffer. While DMA is filling the second buffer, I can drain the first one.
 
     DMA1_Stream4->CR |= DMA_SxCR_DBM; //turn on double buffer mode
-    
-    //Peripheral Location
-    DMA1_Stream4->PAR = (uint32_t)&GPIOB->IDR;
-    
-    //Memory Buffers
+
+    //Setting Memory and Peripheral widths
+    DMA1_Stream4->CR &= ~(0x3 << DMA_SxCR_MSIZE); //One byte
+    DMA1_Stream4->CR &= ~(0x3 << DMA_SxCR_PSIZE); //One byte
+
+    DMA1_Stream4->PAR = (uint32_t)&GPIOB->IDR; //Peripheral Location
+
+
+    //Memory Buffers for DBM
     uint8_t buf0[640];
     uint8_t buf1[640];
-
     DMA1_Stream4->M0AR = buf0;
     DMA1_Stream4->M1AR = buf1;
     
     DMA1_Stream4->NDTR = 640; //total number of beats to be captured by DMA
+
+    DMA1_Stream4->CR |= DMA_SxCR_TCIE; //Enable transfer complete interrupt
 
   return OV7670_STATUS_OK;
 }
@@ -231,7 +237,7 @@ void OV7670_capture(uint32_t *dest, uint16_t width, uint16_t height,
   //Start DMA1_Stream4 capture
   DMA1_Stream4->CR |= DMA_SxCR_EN;
   
-  //We grab one pixel at a time, then send it to memory. This repeats 640 times, then we 
+  //Grab one pixel at a time, then send it to memory. This repeats 640 times, then we 
   //move vertically a pixel and repeat.
   //This implementation is directly influenced by the original author's, just modified to 
   //work with my 1-byte DMA setup.
@@ -247,11 +253,11 @@ void OV7670_capture(uint32_t *dest, uint16_t width, uint16_t height,
     while(!*hsync_reg & hsync_bit); //wait for start of row
 
     for (int x = 0; x < width; x++){
-      while() {//wait for DMA transfer ready 
+      while(DMA1->HISR & ~(1<<DMA_HISR_TCIF4)); //wait for DMA transfer ready 
         //save value somewhere
         //After figuring this out, work out if SPI can be implemented here to send it to screen/SD card
         //work on SD implementation
-      }
+
     }
 
 
