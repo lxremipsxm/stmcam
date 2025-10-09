@@ -172,10 +172,16 @@ It's been about two weeks since my last update. So far, I've made a ton of progr
 I've also implemented *some* of the `OV7670_capture()` method. Right now, all I need to get that to work is to wire up the camera, using USART to check if the clocks are triggering DMA by checking relevant flags (I haven't figured out which ones yet), and then commenting out USART. Once I wire up a display, I can try using SPI to transfer data from memory to the screen and seeing if anything pops up.
 
 
+##### 10/9/25
+
+I've completed the capture function, but haven't tested it yet. In order to do that, I have to first implement the extern functions that the Adafruit repository author suggests. I need to do this over I2C. For this, I'll decide a SCL and SDA line on the Nucleo. I may also create an I2C library, but I can probably just implement it directly in the `OV7670_externs.c` module I have set up.
+
+I2C has two modes: Standard and Filtered. I will use filtered as I want to use a higher clock speed for faster transfers. 
+
+
 ### Challenges
 
 I learnt an even more important fact about the documentation that I wasn't aware of, even though it was quite blatant: the bit locations and register names and functions are displayed in full detail, which makes things incredibly easy to set up. For example, I was struggling to compile all the information about the registers that I was googling when setting up the timer to go into the XCLK pin (TIM1 Advanced Timer). Turns out, the whole thing is right there in the documentation: at the end of every chapter, there's a section dedicated to register bit locations and names that I was skipping over. After I discovered that, setting up TIM1 output on PA8 was a piece of cake.
  
 
-## SD card slot
 
