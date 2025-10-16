@@ -10,20 +10,21 @@ Comments
 */
 
 #include <stdint.h>
-#include "src/lib/uart.h"
+#include "uart.h"
+#include "i2c.h"
 
 void OV7670_print(char *str){
     send_com_string(str);
 }
 
 
-int OV7670_read_register(void *platform, uint8_t reg){
-    
-
-}
+int OV7670_read_register(void *platform, uint8_t reg){    
+    i2c_rx(0x21, reg);
+    return 0;
+}  
 
 
 void OV7670_write_register(void *platform, uint8_t reg, uint8_t value){
-
-
+    i2c_tx(0x21, reg, value);
+    return 0;
 }

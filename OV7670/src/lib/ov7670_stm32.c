@@ -126,10 +126,10 @@ void OV7670_pin_write(int pin, int hi){
 }
 
 
-void OV7670_disable_interrupts(void);
+void OV7670_disable_interrupts(void){}
 
 
-void Ov7670_enable_interrupts(void);
+void Ov7670_enable_interrupts(void){}
 
 
 OV7670_status OV7670_arch_begin(OV7670_host *host) {
@@ -163,12 +163,14 @@ OV7670_status OV7670_arch_begin(OV7670_host *host) {
     uint16_t period = 84000000 / OV7670_XCLK_HZ - 1;
 
 
-    TIM1->CCMR1 &= ~((0x7) << 4); //clear OC1M bits in capture/compare mode register
-    TIM1->CCMR1 |= ((0x6) << 4); //set to PWM mode
+
     TIM1->EGR |= TIM_EGR_UG; //STM32 docs say to enable update events 
 
     TIM1->ARR = period; //set auto-reload register
     TIM1->CCR1 = (period+1)/2; //set capture/compare register. I'm directly copying the calculation the og author used 
+    
+    TIM1->CCMR1 &= ~((0x7) << 4); //clear OC1M bits in capture/compare mode register
+    TIM1->CCMR1 |= ((0x6) << 4); //set to PWM mode
     
     TIM1->CCER |= TIM_CCER_CC1E; //enable channel 1
     TIM1->CCMR1 |= TIM_CCMR1_OC1PE; //set preload enable
@@ -217,8 +219,9 @@ OV7670_status OV7670_arch_begin(OV7670_host *host) {
 
 
     //Memory Buffers for DBM
-    uint8_t buf0[640];
-    uint8_t buf1[640];
+    volatile uint8_t buf0[640];
+    volatile uint8_t buf1[640];
+
     DMA1_Stream4->M0AR = buf0;
     DMA1_Stream4->M1AR = buf1;
     
@@ -234,72 +237,6 @@ void OV7670_capture(uint32_t *dest, uint16_t width, uint16_t height,
                     volatile uint32_t *vsync_reg, uint32_t vsync_bit,
                     volatile uint32_t *hsync_reg, uint32_t hsync_bit) {
 
-  //Start DMA1_Stream4 capture
-  DMA1_Stream4->CR |= DMA_SxCR_EN;
-  
-  //Grab one pixel at a time, then send it to memory. This repeats 640 times, then we 
-  //move vertically a pixel and repeat.
-  //This implementation is directly influenced by the original author's, just modified to 
-  //work with my 1-byte DMA setup.
-
-  while (*vsync_reg & vsync_bit); //wait for end of frame
-  while (!*vsync_reg & vsync_bit); //wait for frame start
-
-  //width = width
-
-  for (uint16_t y = 0; y < height; y++){//for each row
-
-    while(*hsync_reg & hsync_bit); //wait for end of row
-    while(!*hsync_reg & hsync_bit); //wait for start of row
-
-    for (int x = 0; x < width; x++){
-      while(DMA1->HISR & ~(1<<DMA_HISR_TCIF4)); //wait for DMA transfer ready 
-        //save value somewhere
-        //After figuring this out, work out if SPI can be implemented here to send it to screen/SD card
-        //work on SD implementation
-
-    }
-
-
-  }
    
-                    
-
 }
-
-
-
-
-
-
-/*-------------------Reference and og code below this line--------------------------------- */
-
-// Non-DMA capture function using previously-initialized PCC peripheral.
-void OV7670_capture(uint32_t *dest, uint16_t width, uint16_t height,
-                    volatile uint32_t *vsync_reg, uint32_t vsync_bit,
-                    volatile uint32_t *hsync_reg, uint32_t hsync_bit) {
-
-  while (*vsync_reg & vsync_bit)
-    ; // Wait for VSYNC low (frame end)
-  OV7670_disable_interrupts();
-  while (!*vsync_reg & vsync_bit)
-    ; // Wait for VSYNC high (frame start)
-
-  width /= 2;                             // PCC receives 2 pixels at a time
-  for (uint16_t y = 0; y < height; y++) { // For each row...
-    while (*hsync_reg & hsync_bit)
-      ; //  Wait for HSYNC low (row end)
-    while (!*hsync_reg & hsync_bit)
-      ;                               //  Wait for HSYNC high (row start)
-    for (int x = 0; x < width; x++) { //   For each column pair...
-      while (!PCC->ISR.bit.DRDY)
-        ;                     //    Wait for PCC data ready
-      *dest++ = PCC->RHR.reg; //    Store 2 pixels
-    }
-  }
-
-  OV7670_enable_interrupts();
-}
-
-
 

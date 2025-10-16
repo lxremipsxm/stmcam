@@ -179,6 +179,12 @@ I've completed the capture function, but haven't tested it yet. In order to do t
 I2C has two modes: Standard and Filtered. I will use filtered as I want to use a higher clock speed for faster transfers. 
 
 
+##### 10/15/25
+
+I added the I2C library and included them in the `ov7670_externs.c` file. I used an LLM to verify if my DMA function was good, but apparently it is not, so I will re-implement it by looking through the documentation more thoroughly. In fact, I will read the entire section, not just what looks like it concerns me, and take notes, then apply whatever I've gathered from there in my function. I've also been informed by the LLM that using circular mode (where `NDTR` reloads to the starting mode every time it reaches 0) is better for my library as it avoids having to manually reload `NDTR` every time a capture is complete, therefore avoiding any missing data from the tight timing windows I need the MCU to maneuver around.
+
+As a result, I've cleared out `OV7670_capture()` and will make heavy revisions to `OV7670_arch_begin()`. In the meantime, I will also try and acquire a TFT monitor to display and/or debug the output coming from the camera and whether or not it is actually capturing anything at all.
+
 ### Challenges
 
 I learnt an even more important fact about the documentation that I wasn't aware of, even though it was quite blatant: the bit locations and register names and functions are displayed in full detail, which makes things incredibly easy to set up. For example, I was struggling to compile all the information about the registers that I was googling when setting up the timer to go into the XCLK pin (TIM1 Advanced Timer). Turns out, the whole thing is right there in the documentation: at the end of every chapter, there's a section dedicated to register bit locations and names that I was skipping over. After I discovered that, setting up TIM1 output on PA8 was a piece of cake.
