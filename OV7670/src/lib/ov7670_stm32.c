@@ -140,6 +140,8 @@ OV7670_status OV7670_arch_begin(OV7670_host *host) {
     //The code for the SAMD5 uses PCC, or parallel capture controller. I am not aware of whether 
     //STM32F01RE has a PCC equivalent, so I will do some more digging to find an equivalent or alternative
 
+
+    /*-----------------------------------Enabling GPIOA for output on PA8----------------------------------------*/
     //XCLK on PA8, Timer 1, channel 1
     RCC->APB2ENR |= RCC_APB2ENR_TIM1EN; //enable clock on TIM1
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN; //enable clock on GPIOA
@@ -150,6 +152,8 @@ OV7670_status OV7670_arch_begin(OV7670_host *host) {
     GPIOA->AFR[1] &= ~((0xF) << (4*(8-8))); //Clear alternate function register
     GPIOA->AFR[1] |= ((0x1)<< (4*(8-8))); //set alternate function to TIM1, channel 1
 
+
+    /*-----------------------------------Enabling TIM1 for output to XCLK---------------------------------------*/
 
     //For 20MHz, we need 2000000 pulses a second. According to the original author, a 50% duty cycle is
     //recommended. I'll look at the original code to get an idea of how the author did this for SAMD51
@@ -163,29 +167,22 @@ OV7670_status OV7670_arch_begin(OV7670_host *host) {
     uint16_t period = 84000000 / OV7670_XCLK_HZ - 1;
 
 
-
     TIM1->EGR |= TIM_EGR_UG; //STM32 docs say to enable update events 
 
     TIM1->ARR = period; //set auto-reload register
     TIM1->CCR1 = (period+1)/2; //set capture/compare register. I'm directly copying the calculation the og author used 
+    TIM1->CCER |= TIM_CCER_CC1E; //enable channel 1
     
     TIM1->CCMR1 &= ~((0x7) << 4); //clear OC1M bits in capture/compare mode register
-    TIM1->CCMR1 |= ((0x6) << 4); //set to PWM mode
-    
-    TIM1->CCER |= TIM_CCER_CC1E; //enable channel 1
-    TIM1->CCMR1 |= TIM_CCMR1_OC1PE; //set preload enable
+    TIM1->CCMR1 |= ((0x6) << 4) | TIM_CCMR1_OC1PE; //set preload enable and PWM mode
+
     TIM1->CR1 |= TIM_CR1_CEN; //start counter channel 1
     TIM1->BDTR |= TIM_BDTR_MOE; //enable output (PA8 will output this as it is configured to output)
 
 
-    //set up DMA peripheral-to-memory mode. DMA should be triggered by a timer that toggles based on PCLK (PA6), then grab 8 bits from 
-    //GPIO B, preferably PORTB[7:0], and send to memory via double-buffering mode. This should enable the highest possible 
-    //frame rate from the camera.
 
-    //Set up PCLK input capture
-    RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN; //Enable DMA1 clock
-    DMA1_Stream4->CR &= ~DMA_SxCR_EN; //Disable DMA1 
-    DMA1_Stream4->CR &= ~((0x3)<<DMA_SxCR_DIR_Pos); //Peripheral-to-memory mode
+
+    /*------------------------------------------Enabling TIM3 for PCLK input -------------------------------------------*/
 
     //Set up PA6 input capture mode: Takes input from PCLK
     RCC->APB1ENR |= RCC_APB1ENR_TIM3EN; //Enable timer 3
@@ -199,10 +196,23 @@ OV7670_status OV7670_arch_begin(OV7670_host *host) {
     
     TIM3->SMCR &= ~(0x7<<TIM_SMCR_TS); //Clearing TS bits
     TIM3->SMCR |= (0x6<<TIM_SMCR_TS); //Setting TS bits to 110
+
+    TIM3->DIER |= TIM_DIER_CC1DE; //enable DMA request on capture/compare
     
     TIM3->CR1 |= TIM_CR1_CEN; //Tim3 enabled. In this mode, at every rising edge, TIF flag is set. 
 
-    //Setting up DMA1
+
+
+    
+    /*---------------------------------Enabling DMA1 Stream 4 for TIM3 triggered transfer -------------------------------------------*/
+    //set up DMA peripheral-to-memory mode. DMA should be triggered by a timer that toggles based on PCLK (PA6), then grab 8 bits from 
+    //GPIO B, preferably PORTB[7:0], and send to memory via double-buffering mode. This should enable the highest possible 
+    //frame rate from the camera.
+
+    RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN; //Enable DMA1 clock
+    DMA1_Stream4->CR &= ~DMA_SxCR_EN; //Disable DMA1 
+    DMA1_Stream4->CR &= ~((0x3)<<DMA_SxCR_DIR_Pos); //Peripheral-to-memory mode
+
     //The number of DMA captures that will be made is stored in NDTR. The camera has a resolution of 640x480, so that's 307 200 pixels.
     //Since I'm capturing line-by-line, and each pixel is 8 bits, I need to capture 640 bytes of information. Each DMA transfer
     //transfers one byte from data[7:0] to memory until 640 pixels have been transferred. 
@@ -210,14 +220,11 @@ OV7670_status OV7670_arch_begin(OV7670_host *host) {
     //Then, DMA switches over to the second memory buffer. While DMA is filling the second buffer, I can drain the first one.
 
     DMA1_Stream4->CR |= DMA_SxCR_DBM; //turn on double buffer mode
-
     //Setting Memory and Peripheral widths
     DMA1_Stream4->CR &= ~(0x3 << DMA_SxCR_MSIZE); //One byte
     DMA1_Stream4->CR &= ~(0x3 << DMA_SxCR_PSIZE); //One byte
 
     DMA1_Stream4->PAR = (uint32_t)&GPIOB->IDR; //Peripheral Location
-
-
     //Memory Buffers for DBM
     volatile uint8_t buf0[640];
     volatile uint8_t buf1[640];
@@ -226,7 +233,9 @@ OV7670_status OV7670_arch_begin(OV7670_host *host) {
     DMA1_Stream4->M1AR = buf1;
     
     DMA1_Stream4->NDTR = 640; //total number of beats to be captured by DMA
+    //DMA1_Stream4->CR |= DMA_SxCR_CIRC; //apparently CIRC is dont care in DBM
 
+    DMA1_Stream4->CR |= (0x5 << DMA_SxCR_CHSEL); //select channel 5: Tim3_ch1 
     DMA1_Stream4->CR |= DMA_SxCR_TCIE; //Enable transfer complete interrupt
 
   return OV7670_STATUS_OK;
@@ -236,6 +245,8 @@ OV7670_status OV7670_arch_begin(OV7670_host *host) {
 void OV7670_capture(uint32_t *dest, uint16_t width, uint16_t height,
                     volatile uint32_t *vsync_reg, uint32_t vsync_bit,
                     volatile uint32_t *hsync_reg, uint32_t hsync_bit) {
+
+      
 
    
 }
